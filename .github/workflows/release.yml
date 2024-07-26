@@ -1,0 +1,53 @@
+name: Build Python Package
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/pip
+          ~/.platformio/.cache
+        key: ${{ runner.os }}-pio
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Build pyproject package
+      run: |
+        cd ./pyetera-uart-bridge-folder
+        python -m pip install --upgrade pip
+        python -m pip install --upgrade build
+        python -m build
+    
+    - name: Install PlatformIO Core
+      run: pip install --upgrade platformio
+    
+    - name: Build PlatformIO project
+      run: |
+        cd ./pyetera-uart-bridge-folder
+        pio run
+
+    - name: Create new release with build artifact
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          ./pyetera-uart-bridge-folder/dist/*
+          ./pio-eub-firmware\.pio\build\nanoatmega328\firmware.*
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag_name: ${{ github.ref }}
+        release_name: ${{ github.ref }}
+        body: "Release ${{ github.ref }}"
+        
