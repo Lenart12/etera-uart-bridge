@@ -1,4 +1,4 @@
-name: Build Python Package
+name: Build and Release project on tag push
 
 on:
   push:
@@ -27,7 +27,7 @@ jobs:
 
     - name: Build pyproject package
       run: |
-        cd ./pyetera-uart-bridge-folder
+        cd ./pyetera-uart-bridge
         python -m pip install --upgrade pip
         python -m pip install --upgrade build
         python -m build
