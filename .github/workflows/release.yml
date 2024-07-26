@@ -45,7 +45,7 @@ jobs:
       with:
         files: |
           ./pyetera-uart-bridge/dist/*
-          ./pio-eub-firmware\.pio\build\nanoatmega328\firmware.*
+          ./pio-eub-firmware/.pio/build/nanoatmega328/firmware.*
         token: ${{ secrets.GITHUB_TOKEN }}
         tag_name: ${{ github.ref }}
         name: ${{ github.ref }}
