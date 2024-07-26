@@ -37,14 +37,14 @@ jobs:
     
     - name: Build PlatformIO project
       run: |
-        cd ./pyetera-uart-bridge-folder
+        cd ./pio-eub-firmware
         pio run
 
     - name: Create new release with build artifact
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          ./pyetera-uart-bridge-folder/dist/*
+          ./pyetera-uart-bridge/dist/*
           ./pio-eub-firmware\.pio\build\nanoatmega328\firmware.*
         token: ${{ secrets.GITHUB_TOKEN }}
         tag_name: ${{ github.ref }}
