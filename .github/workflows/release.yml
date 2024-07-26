@@ -51,6 +51,6 @@ jobs:
           ./pio-eub-firmware/.pio/build/nanoatmega328/firmware.*
         token: ${{ secrets.GITHUB_TOKEN }}
         tag_name: ${{ github.ref }}
-        name: ${{ github.ref }}
-        body: "Release ${{ github.ref }}"
+        name: Release ${{ github.ref_name}}
+        body: "Release ${{ github.ref_name }}"
         
