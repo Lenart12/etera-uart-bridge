@@ -126,7 +126,7 @@ void ProcessUart() {
     if (c == 'h') {
       TC_PRINT_START();
       Serial.println("etera-uart-bridge");
-      Serial.println("Version: 1.0.3");
+      Serial.println("Version: 1.0.4");
       Serial.println("Lenart (c) 2024");
       Serial.println();
       Serial.println("Commands:");
@@ -143,6 +143,20 @@ void ProcessUart() {
       Serial.println("\t`0xEA` - start of ascii message");
       Serial.println("\t`0xEB` - end of ascii message");
       Serial.println("\t`0b110100mm [motor 0-3]` - motor finished moving");
+      Serial.println("Status:");
+      Serial.print("\tNumber of temperature sensors: ");
+      int n = tempController.GetDeviceCount();
+      Serial.println(n, DEC);
+      Serial.println("\tAdresses: ");
+      for (int i = 0; i < n; i++) {
+	uint8_t* address = tempController.GetAddress(i);
+	Serial.print("\t\t");
+	for (int c = 0; c < 8; c++){
+	  Serial.print(address[c], HEX);
+	  Serial.print(" ");
+	}
+	Serial.println("");
+      }
       TC_PRINT_END();
     } else if (c == 'c') {
       Serial.write('c');
@@ -151,7 +165,7 @@ void ProcessUart() {
       Serial.write('t');
       int n = tempController.GetDeviceCount();
       for (int i = 0; i < n; i++) {
-        uint16_t temp = tempController.GetTempature(i);
+        uint16_t temp = tempController.GetTemperature(i);
         Serial.write((uint8_t*)&temp, 2);
       }
     }

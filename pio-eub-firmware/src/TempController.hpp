@@ -12,7 +12,7 @@ public:
 
     uint8_t GetDeviceCount()
     { return device_count; }
-    uint16_t GetTempature(uint8_t device)
+    uint16_t GetTemperature(uint8_t device)
     {
         if (device < device_count)
             return results[device];
