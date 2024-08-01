@@ -67,7 +67,7 @@ void SetMotorDirection(int motor, int direction) {
 
 void setup() {
   Serial.begin(115200);
-  TC_PRINTLN("etera-uart-bridge ('h' for help)");
+  TC_PRINTLN("etera-uart-bridge expander ('h' for help)");
 
   pinMode(MOTOR_1L_PIN, OUTPUT);
   pinMode(MOTOR_1D_PIN, OUTPUT);
@@ -119,6 +119,15 @@ void ProcessMotor() {
   }
 }
 
+void PrintHex8(uint8_t *data, uint8_t length) // prints 8-bit data in hex with leading zeroes
+{
+        for (int i=0; i<length; i++) { 
+          if (data[i]<0x10) {Serial.print("0");} 
+          Serial.print(data[i],HEX); 
+          Serial.print(" "); 
+        }
+}
+
 void ProcessUart() {
   if (Serial.available() > 0) {
     char c = Serial.read();
@@ -126,7 +135,7 @@ void ProcessUart() {
     if (c == 'h') {
       TC_PRINT_START();
       Serial.println("etera-uart-bridge");
-      Serial.println("Version: 1.0.4");
+      Serial.println("Version: 1.0.8");
       Serial.println("Lenart (c) 2024");
       Serial.println();
       Serial.println("Commands:");
@@ -143,19 +152,14 @@ void ProcessUart() {
       Serial.println("\t`0xEA` - start of ascii message");
       Serial.println("\t`0xEB` - end of ascii message");
       Serial.println("\t`0b110100mm [motor 0-3]` - motor finished moving");
-      Serial.println("Status:");
-      Serial.print("\tNumber of temperature sensors: ");
       int n = tempController.GetDeviceCount();
-      Serial.println(n, DEC);
-      Serial.println("\tAdresses: ");
+      Serial.println("Temperature sensors:");
       for (int i = 0; i < n; i++) {
 	uint8_t* address = tempController.GetAddress(i);
-	Serial.print("\t\t");
-	for (int c = 0; c < 8; c++){
-	  Serial.print(address[c], HEX);
-	  Serial.print(" ");
-	}
-	Serial.println("");
+	Serial.print("\t #"); Serial.print(i+1, DEC);
+	Serial.print("\t"); PrintHex8(address, 8);
+	uint16_t temp = tempController.GetTemperature(i);
+	Serial.print("\t"); Serial.print(temp/16.0, 1); Serial.println("ºC");
       }
       TC_PRINT_END();
     } else if (c == 'c') {
