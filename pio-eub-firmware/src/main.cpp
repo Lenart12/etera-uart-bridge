@@ -143,7 +143,7 @@ void ProcessUart() {
       Serial.println("\t`c` - get temperature sensors count (uint8_t)");
       Serial.println("\t`t` - get temperature sensor temperature (int16_t[count])");
       Serial.println("\t`a` - get temperature sensor address (int8_t[8][count])");
-      Serial.println("\t`0xE1` - reset device");
+      Serial.println("\t`0xE1` - (r)eset device");
       Serial.println("\t`0b11000mmd [mm(motor 0-3)][d 0-1]``duration_ms(uint16_t)` - set motor direction (0 - left, 1 - right)");
       Serial.println("\t`0b1010rrrv [rrr(gpio 0-7)][v 0-1]` - set gpio value (0 - low, 1 - high)");
       Serial.println("Recieve:");
@@ -202,7 +202,7 @@ void ProcessUart() {
       int value = c & 1;
       digitalWrite(EXPANDER_PIN_START + gpio, value);
       Serial.write(c);
-    } else if (c == 0xE1) {
+    } else if (c == 0xE1 || c == 'r') {
       NanoReset();
     } else {
       TC_PRINT_START();
