@@ -146,7 +146,7 @@ void ProcessUart() {
       Serial.println("\t`0xE1` - (r)eset device");
       Serial.println("\t`0b11000mmd [mm(motor 0-3)][d 0-1]``duration_ms(uint16_t)` - set motor direction (0 - left, 1 - right)");
       Serial.println("\t`0b1010rrrv [rrr(gpio 0-7)][v 0-1]` - set gpio value (0 - low, 1 - high)");
-      Serial.println("Recieve:");
+      Serial.println("Received messages:");
       Serial.println("\t`0xE0` - device reset and ready");
       Serial.println("\t`0xE1` - device starting to reset");
       Serial.println("\t`0xEA` - start of ascii message");
