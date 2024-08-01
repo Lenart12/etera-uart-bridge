@@ -2,7 +2,7 @@
 Copyright (c) 2007, Jim Studt  (original old version - many contributors since)
 
 The latest version of this library may be found at:
-  http://www.pjrc.com/teensy/td_libs_OneWireFet.html
+  http://www.pjrc.com/teensy/td_libs_OneWire.html
 
 OneWireFet has been maintained by Paul Stoffregen (paul@pjrc.com) since
 January 2010.

@@ -57,6 +57,11 @@ void TempController::Process() {
             ds.search(addr);
             for (int j = 0; j < 8; j++) devices[i][j] = addr[j];
         }
+	TC_PRINT_START();
+	Serial.print("Temperature Controller setup found ");
+	Serial.print(device_count, DEC);
+	Serial.print(" sensors.");
+	TC_PRINT_END();
 
         state = State::START_CONVERSION;
         break;
