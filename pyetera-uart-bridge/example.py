@@ -1,4 +1,4 @@
-from pyetera_uart_bridge import EteraUartBridge
+from kronoterm2mqtt.pyetera_uart_bridge import EteraUartBridge
 import asyncio
 
 async def main():
