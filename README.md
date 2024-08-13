@@ -13,3 +13,11 @@ More information about the expander board, including usage instructions and exam
 ## Circuit
 
 ![Circuit](https://i.imgur.com/JnAUPYg.png)
+
+## Home assistant MQTT device
+
+[MQTT](images/home-assistant-mqtt.png)
+
+## Hardware
+
+[Installed PCBs](images/custom-etera-expaner.jpg)
