@@ -57,6 +57,7 @@ void TempController::Process() {
             ds.search(addr);
             for (int j = 0; j < 8; j++) devices[i][j] = addr[j];
         }
+
 	TC_PRINT_START();
 	Serial.print("Temperature Controller setup found ");
 	Serial.print(device_count, DEC);
@@ -102,7 +103,8 @@ void TempController::Process() {
         ds.write(0xBE); // Read scratchpad
         // Read temperature
         byte data[9];
-        for (int j = 0; j < 9; j++) data[j] = ds.read();
+        for (int j = 0; j < 9; j++)
+	  data[j] = ds.read();
         // Check CRC
         if (OneWireFet::crc8(data, 8) != data[8]) {
             if (++crc_error_timeout > 10) {
@@ -113,15 +115,23 @@ void TempController::Process() {
         }
 
         // Convert the data to actual temperature
-        uint16_t raw = (data[1] << 8) | data[0];
-        if (addr[0] == 0x10) {
-            raw = raw << 3; // 9 bit resolution default
-            if (data[7] == 0x10) raw = (raw & 0xFFF0) + 12 - data[6];
+        int16_t raw = (data[1] << 8) | (data[0] & 0xFE);
+        if (addr[0] == 0x10) { // DS18S20 or old DS1820 returns temperature in 1/128 degrees 
+	  // Note that count_per_c register data[7] is not hardcoded to 16 as stated
+	  // in http://myarduinotoy.blogspot.com/2013/02/12bit-result-from-ds18s20.html
+	  // and usually ranges from 80 to 108. Thefore, we multiply by 128 in order 
+	  // to get sufficient precission. Similarly as in
+	  // https://github.com/milesburton/Arduino-Temperature-Control-Library/blob/master/DallasTemperature.cpp
+	  // https://github.com/milesburton/Arduino-Temperature-Control-Library/blob/65112b562fd37af68ed113c9a3925c09c4529e14/DallasTemperature.cpp#L712
+	  uint16_t  dt = (data[7]-data[6]) << 7; // multiply by 128
+	  dt /= data[7]; 
+	  raw = raw*64 - 32 + dt; // 0.5*128=64 == 1 << 6; 0.25*128=32
         } else {
             byte cfg = (data[4] & 0x60);
             if (cfg == 0x00) raw = raw & ~7;  // 9 bit resolution, 93.75 ms
             else if (cfg == 0x20) raw = raw & ~3; // 10 bit res, 187.5 ms
             else if (cfg == 0x40) raw = raw & ~1; // 11 bit res, 375 ms
+	    raw = raw << 3; // 16*8=128 -> 1<<3=8
         }
         results[current_device] = raw;
 
