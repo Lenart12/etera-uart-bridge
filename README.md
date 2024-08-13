@@ -16,8 +16,8 @@ More information about the expander board, including usage instructions and exam
 
 ## Home assistant MQTT device
 
-[MQTT](images/home-assistant-mqtt.png)
+![MQTT](images/home-assistant-mqtt.png)
 
 ## Hardware
 
-[Installed PCBs](images/custom-etera-expaner.jpg)
+![Installed PCBs](images/custom-etera-expaner.jpg)
