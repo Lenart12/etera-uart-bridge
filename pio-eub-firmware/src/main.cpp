@@ -135,7 +135,7 @@ void ProcessUart() {
     if (c == 'h') {
       TC_PRINT_START();
       Serial.println("etera-uart-bridge");
-      Serial.println("Version: 1.0.8");
+      Serial.println("Version: 1.0.9");
       Serial.println("Lenart (c) 2024");
       Serial.println();
       Serial.println("Commands:");
@@ -159,7 +159,7 @@ void ProcessUart() {
 	Serial.print("\t #"); Serial.print(i+1, DEC);
 	Serial.print("\t"); PrintHex8(address, 8);
 	uint16_t temp = tempController.GetTemperature(i);
-	Serial.print("\t"); Serial.print(temp/16.0, 1); Serial.println("ºC");
+	Serial.print("\t"); Serial.print(temp/128.0, 2); Serial.println("ºC");
       }
       TC_PRINT_END();
     } else if (c == 'c') {

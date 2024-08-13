@@ -224,7 +224,7 @@ class EteraUartBridge:
                                 if len(c) != 2:
                                     command.successful = False
                                     break
-                                command.temperatures.append(ctypes.c_int16.from_buffer_copy(c).value / 16)
+                                command.temperatures.append(ctypes.c_int16.from_buffer_copy(c).value / 128.0)
 
                         command.finished.set()
 
