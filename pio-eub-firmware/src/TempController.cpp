@@ -115,7 +115,7 @@ void TempController::Process() {
         }
 
         // Convert the data to actual temperature
-        int16_t raw = (data[1] << 8) | (data[0] & 0xFE);
+        int16_t raw = (data[1] << 8) | data[0];
         if (addr[0] == 0x10) { // DS18S20 or old DS1820 returns temperature in 1/128 degrees 
 	  // Note that count_per_c register data[7] is not hardcoded to 16 as stated
 	  // in http://myarduinotoy.blogspot.com/2013/02/12bit-result-from-ds18s20.html
@@ -125,7 +125,7 @@ void TempController::Process() {
 	  // https://github.com/milesburton/Arduino-Temperature-Control-Library/blob/65112b562fd37af68ed113c9a3925c09c4529e14/DallasTemperature.cpp#L712
 	  uint16_t  dt = (data[7]-data[6]) << 7; // multiply by 128
 	  dt /= data[7]; 
-	  raw = raw*64 - 32 + dt; // 0.5*128=64 == 1 << 6; 0.25*128=32
+	  raw = (raw&0xFFFE)*64 - 32 + dt; // 0.5*128=64 == 1 << 6; 0.25*128=32
         } else {
             byte cfg = (data[4] & 0x60);
             if (cfg == 0x00) raw = raw & ~7;  // 9 bit resolution, 93.75 ms
