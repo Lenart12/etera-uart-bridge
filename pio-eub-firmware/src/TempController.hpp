@@ -5,6 +5,8 @@
 #include "ApplicationDefines.h"
 #include <Arduino.h>
 
+#define DEBUG_TEMP
+
 class TempController
 {
 public:
@@ -12,12 +14,26 @@ public:
 
     uint8_t GetDeviceCount()
     { return device_count; }
-    uint16_t GetTemperature(uint8_t device)
+    int16_t GetTemperature(uint8_t device)
     {
         if (device < device_count)
             return results[device];
         return -1;
     }
+#ifdef DEBUG_TEMP  
+    uint16_t GetRawTemperature(uint8_t device)
+    {
+        if (device < device_count)
+            return raw_temp[device];
+        return -1;
+    }
+   uint16_t GetCountRemain(uint8_t device)
+    {
+        if (device < device_count)
+            return count_remain[device];
+        return -1;
+    }
+#endif  
     uint8_t* GetAddress(uint8_t device)
     {
         if (device < device_count)
@@ -34,6 +50,10 @@ public:
             delete[] devices[i];
         if (devices) delete[] devices;
         if (results) delete[] results;
+#ifdef DEBUG_TEMP
+	if (raw_temp) delete[] raw_temp;
+	if (count_remain) delete [] count_remain;
+#endif	
     }
 
 private:
@@ -53,8 +73,13 @@ private:
     //! Current device being read
     uint8_t current_device = -1;
     //! All conversion results
-    uint16_t* results = nullptr;
-
+    int16_t* results = nullptr;
+#ifdef DEBUG_TEMP
+  //! Raw temperature reading (hi+lo) registers (0.5C precision)
+    uint16_t* raw_temp = nullptr;
+  //! Counts per Celsius (hi) and counts remaining for -0.25 truncated raw_temp offset
+    uint16_t* count_remain = nullptr;
+#endif
     //! Last read temperature
     unsigned long last_read_millis = 0;
 

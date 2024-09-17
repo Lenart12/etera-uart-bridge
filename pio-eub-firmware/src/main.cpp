@@ -172,6 +172,23 @@ void ProcessUart() {
         uint16_t temp = tempController.GetTemperature(i);
         Serial.write((uint8_t*)&temp, 2);
       }
+#ifdef DEBUG_TEMP
+      TC_PRINT_START();
+      for (int i = 0; i < n-1; i++) {
+        uint8_t* address = tempController.GetAddress(i);
+	Serial.print("\t #"); Serial.print(i+1, DEC);
+	Serial.print("\t"); PrintHex8(address, 8);
+	uint16_t temp = tempController.GetTemperature(i);
+	Serial.print("\t"); Serial.print(temp/128.0, 2); Serial.print("ºC");
+	int16_t raw_temp = tempController.GetRawTemperature(i);
+	Serial.print("\t"); Serial.print(raw_temp/2.0, 1);
+	uint16_t count_remain = tempController.GetCountRemain(i);
+	Serial.print("\t"); Serial.print(count_remain, HEX);
+	Serial.print("\t"); Serial.print((char)count_remain, DEC);
+	Serial.print("\t"); Serial.println((char)(count_remain>>8), DEC);
+      }
+      TC_PRINT_END();
+#endif
     }
     else if (c =='a') {
       Serial.write('a');
