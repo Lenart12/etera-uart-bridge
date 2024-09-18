@@ -106,12 +106,8 @@ void TempController::Process() {
     }
     case State::WAIT_CONVERSION: {
         // Check if the conversion is done every 5ms
-        unsigned long new_millis = millis();
-        unsigned long ellapsed = new_millis - last_wait_millis;
-        if (ellapsed < 5) return;
-        last_wait_millis = new_millis;
-
-        if (!ds.read_bit()) return;
+        if (!ds.read_bit())
+            return switch_state(state, 5);
 
         current_device = 0;
         crc_error_timeout = 0;

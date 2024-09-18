@@ -84,8 +84,6 @@ private:
     //! Last read temperature
     unsigned long last_read_millis = 0;
 
-    //! Wait conversion timeout
-    unsigned long last_wait_millis = 0;
     //! Read CRC error timeout
     uint8_t crc_error_timeout = 0;
 
