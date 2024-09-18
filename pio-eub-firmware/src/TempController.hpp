@@ -63,7 +63,8 @@ private:
         SETUP,
         START_CONVERSION,
         WAIT_CONVERSION,
-        READ
+        READ,
+        WAIT_SWITCH_STATE,
     } state = State::SETUP;
 
     //! Total number of temperature sensors on the bus
@@ -87,6 +88,19 @@ private:
     unsigned long last_wait_millis = 0;
     //! Read CRC error timeout
     uint8_t crc_error_timeout = 0;
+
+    void switch_state(State next_state, unsigned long timeout = 0);
+    //! Next state to switch to
+    struct NextState {
+        State state;
+        // Seperated start and delay to prevent overflow errors
+        unsigned long timeout_start;
+        unsigned long timeout_delay;
+        //! Switch to the next state
+        void switch_state(State& current, State next, unsigned long timeout);
+        //! Process the wait state
+        bool process_wait(State& current);
+    } next_state;
 };
 
 #endif // __TEMP_CONTROLLER_HPP__

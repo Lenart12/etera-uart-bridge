@@ -4,6 +4,27 @@
 #include "TempController.hpp"
 #include "ApplicationDefines.h"
 
+void TempController::switch_state(State next, unsigned long timeout) {
+    next_state.switch_state(state, next, timeout);
+}
+
+void TempController::NextState::switch_state(State& current, State next, unsigned long timeout) {
+    if (timeout == 0) {
+        current = next;
+        return;
+    }
+    current = State::WAIT_SWITCH_STATE;
+    state = next;
+    timeout_start = millis();
+    timeout_delay = timeout;
+}
+
+bool TempController::NextState::process_wait(State& current) {
+    if (millis() - timeout_start < timeout_delay) return false;
+    current = state;
+    return true;
+}
+
 void TempController::Process() {
     switch (state)
     {
@@ -72,7 +93,7 @@ void TempController::Process() {
 	Serial.print(" sensors.");
 	TC_PRINT_END();
 
-        state = State::START_CONVERSION;
+        switch_state(State::START_CONVERSION);
         break;
     }
     case State::START_CONVERSION: {
@@ -80,8 +101,7 @@ void TempController::Process() {
         ds.skip();
         ds.write(0x44); // Start temperature conversion
 
-        state = State::WAIT_CONVERSION;
-        last_wait_millis = millis() + 500;
+        switch_state(State::WAIT_CONVERSION, 500);
         break;
     }
     case State::WAIT_CONVERSION: {
@@ -95,13 +115,13 @@ void TempController::Process() {
 
         current_device = 0;
         crc_error_timeout = 0;
-        state = State::READ;
+        switch_state(State::READ);
         break;
     }
     case State::READ: {
         if (current_device >= device_count) {
             last_read_millis = millis();
-            state = State::START_CONVERSION;
+            switch_state(State::START_CONVERSION);
             return;
         }
 
@@ -204,6 +224,10 @@ void TempController::Process() {
 
         crc_error_timeout = 0;
         current_device++;
+        break;
+    }
+    case State::WAIT_SWITCH_STATE: {
+        next_state.process_wait(state);
         break;
     }
     default:
