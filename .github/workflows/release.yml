@@ -42,13 +42,15 @@ jobs:
       run: |
         cd ./pio-eub-firmware
         pio run
+        mv .pio/build/nanoatmega328/{firmware.hex,pio-eub-firmware-${{ github.ref_name }}.hex}
+        mv .pio/build/nanoatmega328/{firmware.elf,pio-eub-firmware-${{ github.ref_name }}.elf}
 
     - name: Create new release with build artifact
       uses: softprops/action-gh-release@v1
       with:
         files: |
           ./pyetera-uart-bridge/dist/*
-          ./pio-eub-firmware/.pio/build/nanoatmega328/firmware.*
+          ./pio-eub-firmware/.pio/build/nanoatmega328/pio-eub-firmware-*
         token: ${{ secrets.GITHUB_TOKEN }}
         tag_name: ${{ github.ref }}
         name: Release ${{ github.ref_name}}
