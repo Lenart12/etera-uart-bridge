@@ -113,7 +113,7 @@ void TempController::Process() {
 
         current_device = 0;
         crc_error_timeout = 0;
-        switch_state(State::READ);
+        switch_state(State::READ, 100);
         break;
     }
     case State::READ: {
@@ -225,6 +225,8 @@ void TempController::Process() {
 
         crc_error_timeout = 0;
         current_device++;
+
+        switch_state(state, 5);
         break;
     }
     case State::WAIT_SWITCH_STATE: {
