@@ -63,7 +63,8 @@ private:
         SETUP,
         START_CONVERSION,
         WAIT_CONVERSION,
-        READ
+        READ,
+        WAIT_SWITCH_STATE,
     } state = State::SETUP;
 
     //! Total number of temperature sensors on the bus
@@ -87,6 +88,13 @@ private:
     unsigned long last_wait_millis = 0;
     //! Read CRC error timeout
     uint8_t crc_error_timeout = 0;
+
+    void switch_state(State next_state, unsigned long timeout = 0);
+    //! Next state to switch to
+    State next_state = State::SETUP;
+    //! Next state timeout
+    unsigned long next_state_millis = 0;
+
 };
 
 #endif // __TEMP_CONTROLLER_HPP__
