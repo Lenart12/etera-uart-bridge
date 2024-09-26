@@ -1,6 +1,13 @@
 #ifndef __APPLICATION_DEFINES_H__
 #define __APPLICATION_DEFINES_H__
 
+#ifndef EUB_VERSION
+#define EUB_VERSION debug
+#endif
+#define CSTR_FB1(x) #x
+#define CSTR_FB(x) CSTR_FB1(x)
+#define EUB_VERSION_STR CSTR_FB(EUB_VERSION)
+
 #define MOTOR_1L_PIN  (A0)
 #define MOTOR_1D_PIN  (A1)
 #define MOTOR_2L_PIN  (A2)

@@ -84,17 +84,21 @@ private:
     //! Last read temperature
     unsigned long last_read_millis = 0;
 
-    //! Wait conversion timeout
-    unsigned long last_wait_millis = 0;
     //! Read CRC error timeout
     uint8_t crc_error_timeout = 0;
 
     void switch_state(State next_state, unsigned long timeout = 0);
     //! Next state to switch to
-    State next_state = State::SETUP;
-    //! Next state timeout
-    unsigned long next_state_millis = 0;
-
+    struct NextState {
+        State state;
+        // Seperated start and delay to prevent overflow errors
+        unsigned long timeout_start;
+        unsigned long timeout_delay;
+        //! Switch to the next state
+        void switch_state(State& current, State next, unsigned long timeout);
+        //! Process the wait state
+        bool process_wait(State& current);
+    } next_state;
 };
 
 #endif // __TEMP_CONTROLLER_HPP__

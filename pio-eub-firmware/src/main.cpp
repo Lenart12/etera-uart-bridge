@@ -135,7 +135,7 @@ void ProcessUart() {
     if (c == 'h') {
       TC_PRINT_START();
       Serial.println("etera-uart-bridge");
-      Serial.println("Version: 1.0.9");
+      Serial.println("Version: " EUB_VERSION_STR );
       Serial.println("Lenart (c) 2024");
       Serial.println();
       Serial.println("Commands:");
