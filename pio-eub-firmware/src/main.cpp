@@ -67,7 +67,7 @@ void SetMotorDirection(int motor, int direction) {
 
 void setup() {
   Serial.begin(115200);
-  TC_PRINTLN("etera-uart-bridge expander ('h' for help)");
+  TC_PRINTLN("etera-uart-bridge expander " EUB_VERSION_STR " ('h' for help)");
 
   pinMode(MOTOR_1L_PIN, OUTPUT);
   pinMode(MOTOR_1D_PIN, OUTPUT);
@@ -136,7 +136,7 @@ void ProcessUart() {
       TC_PRINT_START();
       Serial.println("etera-uart-bridge");
       Serial.println("Version: " EUB_VERSION_STR );
-      Serial.println("Lenart (c) 2024");
+      Serial.println("Lenart Arvo Kos (c) 2024");
       Serial.println();
       Serial.println("Commands:");
       Serial.println("\t`h` - help");

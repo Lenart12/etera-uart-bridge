@@ -5,7 +5,13 @@
 #include "ApplicationDefines.h"
 #include <Arduino.h>
 
-#define DEBUG_TEMP
+//#define DEBUG_TEMP
+
+// Legacy DS1820 sensors are experiencing glitches to x.75 or to x.76
+// few times a day. With this fix we compare previous reading and decide
+// it it is a clitch or not depending on deviation that should not be more
+// than 0.1 K. Typically the glitch is upward from +0.2 to +0.9 K
+#define DOT765
 
 class TempController
 {
@@ -53,6 +59,9 @@ public:
 #ifdef DEBUG_TEMP
 	if (raw_temp) delete[] raw_temp;
 	if (count_remain) delete [] count_remain;
+#endif
+#ifdef DOT765
+	if (previous_temperature) delete [] previous_temperature;
 #endif	
     }
 
@@ -80,6 +89,9 @@ private:
     uint16_t* raw_temp = nullptr;
   //! Counts per Celsius (hi) and counts remaining for -0.25 truncated raw_temp offset
     uint16_t* count_remain = nullptr;
+#endif
+#ifdef DOT765
+  int16_t* previous_temperature;
 #endif
     //! Last read temperature
     unsigned long last_read_millis = 0;
