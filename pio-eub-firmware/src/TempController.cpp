@@ -83,7 +83,9 @@ void TempController::Process() {
             results[i] = 0xFFFF;
             devices[i] = new uint8_t[8];
 #ifdef DOT765
-	    previous_temperature[i] = 0;
+	    // Initialize to large positive temp so that
+	    // the previous temperature reading could not be used first time in a loop
+	    previous_temperature[i] = 0x8000; // Max signed int
 #endif
         }
 
@@ -174,13 +176,12 @@ void TempController::Process() {
           #endif
 
                 dt /= data[7];
-
                 raw = 64*(raw&0xFFFE) - 32 + dt; // 0.5*128=64 == (1<<6); 0.25*128=32
+		
 	  #ifdef  DOT765
-		if(data[7]-data[6] <= 1 || data[6] == 0) { // We got .7[56] questionable temperature read
-		  if(raw-previous_temperature[current_device] > 10) // is change more than +0.08K
-		    raw = previous_temperature[current_device]; // Then this is probabloy a glitch
-		}
+		if((data[6] == 0 || data[7]-data[6] <= 1 )  // We got .7[56] questionable temperature read
+		   && (raw-previous_temperature[current_device] > 10)) // is change more than +0.08K
+		    raw = previous_temperature[current_device]; // Then this is probably a glitch
 		previous_temperature[current_device] = raw;
 	  #endif
 
@@ -196,7 +197,7 @@ void TempController::Process() {
         crc_error_timeout = 0;
         current_device++;
 
-        switch_state(state, 5);
+        switch_state(state);
         break;
     }
     case State::WAIT_SWITCH_STATE: {

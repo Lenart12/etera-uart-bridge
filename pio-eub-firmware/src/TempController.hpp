@@ -91,7 +91,7 @@ private:
     uint16_t* count_remain = nullptr;
 #endif
 #ifdef DOT765
-  int16_t* previous_temperature;
+  int16_t* previous_temperature = nullptr;
 #endif
     //! Last read temperature
     unsigned long last_read_millis = 0;
