@@ -14,7 +14,7 @@ class MotorQueueCommand:
     finished: asyncio.Event
     successful = bool
 
-    def __init__(self, direction: Direction, length: int):
+    def __init__(self, direction, length: int):
         self.direction = direction
         if length > 65535:
             raise ValueError("Length exceeds maximum value of uint16_t.")
