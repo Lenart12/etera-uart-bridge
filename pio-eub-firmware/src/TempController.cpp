@@ -31,10 +31,13 @@ void TempController::Process() {
     case State::SETUP: {
         // Free the memory if it was allocated before
         if (results) delete[] results;
+        results = nullptr;
 
         #ifdef DEBUG_TEMP
         if (raw_temp) delete[] raw_temp;
+        raw_temp = nullptr;
         if (count_remain) delete [] count_remain;
+        count_remain = nullptr;
         #endif
 
         if (devices) {
@@ -42,6 +45,8 @@ void TempController::Process() {
                 delete[] devices[i];
             delete[] devices;
         }
+        devices = nullptr;
+        
         device_count = 0;
         last_read_millis = 0;
 
