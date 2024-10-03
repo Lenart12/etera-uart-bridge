@@ -15,7 +15,7 @@ For temperature monitoring, the board supports one-wire temperature sensors. The
 
 #### Appendix A. Improved CPU Bus Interface
 
-![Appendix A. Improved CPU Bus Interface](https://www.analog.com/en/_/media/analog/en/landing-pages/technical-articles/guidelines-for-reliable-long-line-1wire-networks/148fig06.gif?rev=-1)
+![Appendix A. Improved CPU Bus Interface](images/148Fig06.gif)
 
 > For long line applications, modifications are necessary. Appendix A shows a variant of the microprocessor port-pin attachments, i e., a FET driver with slew-rate control and a 1kΩ pullup resistor. A radius of up to 200m and a weight of up to 200m can be reliably supported using this interface.
 
