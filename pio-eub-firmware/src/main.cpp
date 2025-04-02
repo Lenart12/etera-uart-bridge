@@ -167,6 +167,17 @@ void ProcessUart() {
       Serial.write(tempController.GetDeviceCount());
     } else if (c == 't') {
       Serial.write('t');
+      // If TC did not read the temperature for more than 30 seconds, we will send 0x7FFF
+      const unsigned long last = tempController.GetLastReadMillis();
+      if (last == 0 || (millis() - last) > 30000) {
+        int n = tempController.GetDeviceCount();
+        for (int i = 0; i < n; i++) {
+          uint16_t temp = 0x7FFF;
+          Serial.write((uint8_t*)&temp, 2);
+        }
+        return;
+      }
+
       int n = tempController.GetDeviceCount();
       for (int i = 0; i < n; i++) {
         uint16_t temp = tempController.GetTemperature(i);

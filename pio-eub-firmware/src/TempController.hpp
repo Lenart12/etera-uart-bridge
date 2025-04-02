@@ -24,7 +24,7 @@ public:
     {
         if (device < device_count)
             return results[device];
-        return -1;
+        return 0x7FFF; // Invalid temperature
     }
 #ifdef DEBUG_TEMP  
     uint16_t GetRawTemperature(uint8_t device)
