@@ -79,19 +79,19 @@ void TempController::Process() {
         raw_temp = new uint16_t[device_count];
         count_remain = new uint16_t[device_count];
         #endif
-	#ifdef DOT765
-	previous_temperature = new int16_t[device_count];
-	#endif
+        #ifdef DOT765
+        previous_temperature = new int16_t[device_count];
+        #endif
         // Allocate memory for the addresses
         devices = new uint8_t*[device_count];
         for (int i = 0; i < device_count; i++) {
             results[i] = 0xFFFF;
             devices[i] = new uint8_t[8];
-#ifdef DOT765
-	    // Initialize to large positive temp so that
-	    // the previous temperature reading could not be used first time in a loop
-	    previous_temperature[i] = 0x8000; // Max signed int
-#endif
+            #ifdef DOT765
+            // Initialize to large positive temp so that
+            // the previous temperature reading could not be used first time in a loop
+            previous_temperature[i] = 0x8000; // Max signed int
+            #endif
         }
 
         // Get the addresses of the devices
@@ -131,9 +131,9 @@ void TempController::Process() {
     }
     case State::READ: {
         if (current_device >= device_count) {
-	  last_read_millis = millis(); // start over from the first sensor
-	  switch_state(State::START_CONVERSION);
-	  return;
+            last_read_millis = millis(); // start over from the first sensor
+            switch_state(State::START_CONVERSION);
+            return;
         }
 
         const uint8_t* addr = devices[current_device];
@@ -174,21 +174,21 @@ void TempController::Process() {
             // https://github.com/milesburton/Arduino-Temperature-Control-Library/blob/master/DallasTemperature.cpp
             // https://github.com/milesburton/Arduino-Temperature-Control-Library/blob/65112b562fd37af68ed113c9a3925c09c4529e14/DallasTemperature.cpp#L712
 
-	  int16_t  dt = 128*(data[7]-data[6]); // multiply by 128
-	  
-          #ifdef DEBUG_TEMP
-                count_remain[current_device] = (data[7] << 8) | data[6];
-          #endif
+            int16_t  dt = 128*(data[7]-data[6]); // multiply by 128
+      
+            #ifdef DEBUG_TEMP
+            count_remain[current_device] = (data[7] << 8) | data[6];
+            #endif
 
-                dt /= data[7];
-                raw = 64*(raw&0xFFFE) - 32 + dt; // 0.5*128=64 == (1<<6); 0.25*128=32
-		
-	  #ifdef  DOT765
-		if((data[6] == 0 || data[7]-data[6] <= 1 )  // We got .7[56] questionable temperature read
-		   && (raw-previous_temperature[current_device] > 10)) // is change more than +0.08K
-		    raw = previous_temperature[current_device]; // Then this is probably a glitch
-		previous_temperature[current_device] = raw;
-	  #endif
+            dt /= data[7];
+            raw = 64*(raw&0xFFFE) - 32 + dt; // 0.5*128=64 == (1<<6); 0.25*128=32
+        
+            #ifdef  DOT765
+            if((data[6] == 0 || data[7]-data[6] <= 1 )  // We got .7[56] questionable temperature read
+            && (raw-previous_temperature[current_device] > 10)) // is change more than +0.08K
+                raw = previous_temperature[current_device]; // Then this is probably a glitch
+            previous_temperature[current_device] = raw;
+            #endif
 
         } else {
             byte cfg = (data[4] & 0x60);

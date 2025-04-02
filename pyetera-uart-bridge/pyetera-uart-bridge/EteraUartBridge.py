@@ -153,6 +153,7 @@ class EteraUartBridge:
                 match c:
                     # Device ready!
                     case b'\xE0':
+                        self._device_message(f'Device is ready on {self._s.port} (state={self._parse_state})'.encode())
                         if self._parse_state not in [self._ParseState.WAIT_READY, self._ParseState.DEVICE_RESET] and \
                             self._on_device_reset_handler is not None:
                             asyncio.create_task(self._on_device_reset_handler())
