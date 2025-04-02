@@ -123,6 +123,8 @@ class EteraUartBridge:
         async with self._temp_sensors_lock:
             return [a[:] for a in self._temp_sensors]
 
+    _invalid_temperature = ctypes.c_int16.from_buffer_copy(b'\xff\x7f').value / 128.0
+
     async def get_temperatures(self):
         if not self._device_ready.is_set():
             raise self.DeviceException("Device is not ready.")
@@ -133,6 +135,8 @@ class EteraUartBridge:
         await command.finished.wait()
         if not command.successful:
             raise self.DeviceException("Failed to get temperature.")
+        if any(temp == self._invalid_temperature for temp in command.temperatures):
+            raise self.DeviceException("Invalid temperature received.")
         return command.temperatures
 
     async def run_forever(self):
