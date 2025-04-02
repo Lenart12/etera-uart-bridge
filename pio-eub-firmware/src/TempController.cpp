@@ -216,6 +216,13 @@ void TempController::Process() {
         break;
     }
     case State::RESET_BUS: {
+        if (millis() - state_start_millis > 60000) {
+            TC_PRINTLN("1-Wire bus reset timeout!");
+            // Try one last time to reset the bus inside setup
+            switch_state(State::SETUP, 1000);
+            return;
+        }
+
         if (!ds.reset()) {
             TC_PRINTLN("1-Wire bus reset failed!");
             switch_state(state, 1000);
