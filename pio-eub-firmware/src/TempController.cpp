@@ -5,6 +5,9 @@
 #include "ApplicationDefines.h"
 
 void TempController::switch_state(State next, unsigned long timeout) {
+    if (state != next) {
+        state_start_millis = millis();
+    }
     next_state.switch_state(state, next, timeout);
 }
 
@@ -124,8 +127,15 @@ void TempController::Process() {
         if (!ds.read_bit())
             return switch_state(state, 5);
 
+        // Check for conversion timeout (2 seconds)
+        if (millis() - state_start_millis > 2000) {
+            TC_PRINTLN("Temperature conversion timeout!");
+            switch_state(State::RESET_BUS, 1000);
+            return;
+        }
+
         current_device = 0;
-        crc_error_timeout = 0;
+        crc_error_count = 0;
         switch_state(State::READ);
         break;
     }
@@ -146,8 +156,8 @@ void TempController::Process() {
         data[j] = ds.read();
         // Check CRC
         if (OneWireFet::crc8(data, 8) != data[8]) {
-            if (++crc_error_timeout > 10) {
-                state = State::SETUP;
+            if (++crc_error_count > 10) {
+                switch_state(State::RESET_BUS, 1000);
                 TC_PRINTLN("CRC check error!");
             }
             return;
@@ -199,17 +209,51 @@ void TempController::Process() {
         }
         results[current_device] = raw;
 
-        crc_error_timeout = 0;
+        crc_error_count = 0;
         current_device++;
 
         switch_state(state);
         break;
     }
+    case State::RESET_BUS: {
+        if (!ds.reset()) {
+            TC_PRINTLN("1-Wire bus reset failed!");
+            switch_state(state, 1000);
+            return;
+        }
+
+        ds.reset_search();
+        uint8_t addr[8];
+        int i = 0;
+        for (; ds.search(addr); i++) {
+            if (i >= device_count) {
+                TC_PRINTLN("1-Wire bus reset found more devices than expected!");
+                switch_state(state, 1000);
+                return;
+            }
+            if (memcmp(addr, devices[i], 8) != 0) {
+                TC_PRINTLN("1-Wire bus reset found different device!");
+                switch_state(state, 1000);
+                return;
+            }
+        }
+
+        if (i != device_count) {
+            TC_PRINTLN("1-Wire bus reset found less devices than expected!");
+            switch_state(state, 1000);
+            return;
+        }
+        
+        TC_PRINTLN("1-Wire bus reset successful!");
+        switch_state(State::START_CONVERSION);
+        break;
+    }
     case State::WAIT_SWITCH_STATE: {
-      next_state.process_wait(state);
-      break;
+        next_state.process_wait(state);
+        break;
     }
     default:
+        TC_PRINTLN("TempController is in unknown state!");
         state = State::SETUP;
     }
 }

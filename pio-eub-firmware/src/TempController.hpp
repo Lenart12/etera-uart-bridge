@@ -74,6 +74,7 @@ private:
         WAIT_CONVERSION,
         READ,
         WAIT_SWITCH_STATE,
+        RESET_BUS,
     } state = State::SETUP;
 
     //! Total number of temperature sensors on the bus
@@ -95,9 +96,11 @@ private:
 #endif
     //! Last read temperature
     unsigned long last_read_millis = 0;
+    //! State start
+    unsigned long state_start_millis = 0;
 
     //! Read CRC error timeout
-    uint8_t crc_error_timeout = 0;
+    uint8_t crc_error_count = 0;
 
     void switch_state(State next_state, unsigned long timeout = 0);
     //! Next state to switch to
