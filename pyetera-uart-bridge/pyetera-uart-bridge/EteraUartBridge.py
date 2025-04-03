@@ -81,7 +81,7 @@ class EteraUartBridge:
         self._debug_capture.write(data)
 
     def _debug_message(self, msg: str):
-        self._write_debug(f'\n[{time.strftime('%b %d %H:%M:%S')} - {msg}]\n'.encode())
+        self._write_debug(f'\n[{time.strftime("%b %d %H:%M:%S")} - {msg}]\n'.encode())
         self._debug_capture.flush()
 
     async def ready(self):
