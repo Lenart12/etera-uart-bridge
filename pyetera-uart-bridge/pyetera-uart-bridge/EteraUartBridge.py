@@ -207,7 +207,7 @@ class EteraUartBridge:
         self._running = True
 
         while True:
-            if self._s.in_waiting != 0 or len(self._command_read_buffer) != 0:
+            while self._s.in_waiting != 0 or len(self._command_read_buffer) != 0:
                 c = None
                 if len(self._command_read_buffer) > 0:
                     c = self._command_read_buffer[0:1]
