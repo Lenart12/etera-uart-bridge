@@ -49,6 +49,8 @@ class EteraUartBridge:
 
     def __init__(self, serial_port: str, on_device_message_handler: callable = print,  on_device_reset_handler: callable = None):
         self._debug_capture = open('/tmp/etera_debug.hex', 'ab')
+        self._debug_lock = asyncio.Lock()
+        self._debug_last_channel = None
         self._debug_message(f'EteraUartBridge starting {serial_port}')
 
         self._s = serial.Serial(port=serial_port, baudrate=115200, timeout=0.5)
@@ -77,11 +79,34 @@ class EteraUartBridge:
         self.set_device_message_handler(on_device_message_handler)
         self.set_device_reset_handler(on_device_reset_handler)
 
-    def _write_debug(self, data: bytes):
-        self._debug_capture.write(data)
+    async def _write_debug(self, channel: str, data: bytes):
+        async with self._debug_lock:
+            if self._debug_last_channel != channel:
+                if self._debug_last_channel is not None:
+                    self._debug_capture.write(b'\n')
+                self._debug_capture.write(f'[{channel}] '.encode())
+                self._debug_last_channel = channel
+            else:
+                self._debug_capture.write(b' ')
+            self._debug_capture.write(data)
+
+    def _write_debug_hex(self, channel: str, data: bytes):
+        self._write_debug(channel, data.hex().upper().encode('utf-8'))
+
+    def _debug_s_read(self, data: bytes):
+        self._write_debug_hex('R', data)
+
+    def _debug_buf_read(self, data: bytes):
+        self._write_debug_hex('BR', data)
+
+    def _debug_s_write(self, data: bytes):
+        self._write_debug_hex('W', data)
+
+    def _debug_buf_write(self, data: bytes):
+        self._write_debug_hex('BW', data)
 
     def _debug_message(self, msg: str):
-        self._write_debug(f'\n[{time.strftime("%b %d %H:%M:%S")} - {msg}]\n'.encode())
+        self._write_debug('M', f'{time.strftime("%b %d %H:%M:%S")} - {msg}\n'.encode())
         self._debug_capture.flush()
 
     async def ready(self):
@@ -187,10 +212,10 @@ class EteraUartBridge:
                 if len(self._command_read_buffer) > 0:
                     c = self._command_read_buffer[0:1]
                     self._command_read_buffer = self._command_read_buffer[1:]
-                    self._write_debug(b'#' + c)
+                    self._debug_buf_read(c)
                 else:
                     c = self._s.read(1)
-                    self._write_debug(b'<' + c)
+                    self._debug_s_read(c)
 
                 match c:
                     # Device ready!
@@ -237,7 +262,7 @@ class EteraUartBridge:
                                     if command is not None:
                                         command.finished.set()
                             else:
-                                self._write_debug(b'!')
+                                self._write_debug('R', b'!')
                                 self._debug_message(f'Unknown input (state={self._parse_state})')
                                 self._device_message(f'Device reached unknown input `{c}` in state {self._parse_state} and will try to reset'.encode())
                                 await self._reset_device()
@@ -272,7 +297,7 @@ class EteraUartBridge:
                         async with self._temp_sensors_lock:
                             for _ in range(len(self._temp_sensors)):
                                 c = self._s.read(2)
-                                self._write_debug(b'<' + c)
+                                self._debug_s_read(c)
                                 if len(c) != 2:
                                     command.successful = False
                                     break
@@ -305,7 +330,7 @@ class EteraUartBridge:
         if not self._send_command(b'c'):
             raise self.DeviceException('Failed to send get temperature count command')
         c = self._s.read(1)
-        self._write_debug(b'<' + c)
+        self._debug_s_read(c)
         if len(c) != 1:
             raise self.DeviceException('Failed to get temperature count')
 
@@ -317,7 +342,7 @@ class EteraUartBridge:
             self._temp_sensors.clear()
             for _ in range(temp_sensor_count):
                 c = self._s.read(8)
-                self._write_debug(b'<' + c)
+                self._debug_s_read(c)
                 if len(c) != 8:
                     raise self.DeviceException('Failed to get temperature sensors')
                 self._temp_sensors.append(c)
@@ -355,7 +380,7 @@ class EteraUartBridge:
             expected_byte = command[0:1]
         for retries in range(3):
             self._s.write(command)
-            self._write_debug(b'>' + command)
+            self._debug_s_write(command)
             # print(f"Sending command {command}")
             if self._confirm_command(expected_byte):
                 # print(f"Command {command} successful")
@@ -368,17 +393,17 @@ class EteraUartBridge:
         assert(len(expected_byte) == 1)
         while True:
             c = self._s.read(1)
-            self._write_debug(b'<' + c)
+            self._debug_s_read(c)
 
             if len(c) == 0:
                 self._debug_message(f'Failed to read confirmation byte (state={self._parse_state})')
                 return False
 
             if c == expected_byte:
-                self._write_debug(b'*')
+                self._write_debug('R', b'*')
                 return True
             else:
-                self._write_debug(b'$')
+                self._debug_buf_write(c)
                 self._command_read_buffer += c
 
     def _device_message(self, message: bytes):
