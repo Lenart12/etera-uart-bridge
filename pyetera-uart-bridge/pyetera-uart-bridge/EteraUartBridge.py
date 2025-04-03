@@ -82,11 +82,11 @@ class EteraUartBridge:
     async def _write_debug(self, channel: str, data: bytes):
         async with self._debug_lock:
             if self._debug_last_channel != channel:
-                if self._debug_last_channel is not None:
+                if self._debug_last_channel is not None and self._debug_last_channel != 'M':
                     self._debug_capture.write(b'\n')
                 self._debug_capture.write(f'[{channel}] '.encode())
                 self._debug_last_channel = channel
-            else:
+            elif channel != 'M':
                 self._debug_capture.write(b' ')
             self._debug_capture.write(data)
 
@@ -232,7 +232,7 @@ class EteraUartBridge:
                         await self._reset_device()
                     # Start of ASCII message
                     case b'\xEA':
-                        await self._debug_message('<msg>')
+                        await self._debug_message('Ascii start ->')
                         if self._current_read != b'':
                             await self._device_message(self._current_read)
                         self._current_read = b''
@@ -240,7 +240,7 @@ class EteraUartBridge:
                         self._parse_state = self._ParseState.READ_ASCII
                     # End of ASCII message
                     case b'\xEB':
-                        await self._debug_message('</msg>')
+                        await self._debug_message(f'Ascii end: {self._current_read}')
                         if self._parse_state != self._ParseState.READ_ASCII:
                             await self._debug_message(f'End of ASCII message in state {self._parse_state}')
                             await self._device_message(f'Device reached end of ASCII message in state {self._parse_state} and will try to reset'.encode())
