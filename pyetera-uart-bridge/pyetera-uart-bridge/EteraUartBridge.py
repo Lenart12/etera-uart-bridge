@@ -378,6 +378,14 @@ class EteraUartBridge:
     async def _send_command(self, command: bytes, expected_byte: bytes | None = None):
         if expected_byte is None:
             expected_byte = command[0:1]
+
+        # Read any pending data before sending the command
+        if self._s.in_waiting != 0:
+            c = self._s.read(self._s.in_waiting)
+            await self._debug_s_read(c)
+            await self._debug_buf_write(c)
+            self._command_read_buffer += c
+
         for retries in range(3):
             self._s.write(command)
             await self._debug_s_write(command)
