@@ -9,6 +9,7 @@ from .RelayQueue import RelayQueue
 from .TemperatureQueue import TemperatureQueue
 import inspect
 
+import time
 
 class EteraUartBridge:
     _s: serial.Serial
@@ -47,7 +48,12 @@ class EteraUartBridge:
     _on_device_reset_handler: callable
 
     def __init__(self, serial_port: str, on_device_message_handler: callable = print,  on_device_reset_handler: callable = None):
+        self._debug_capture = open('/tmp/etera_debug.hex', 'ab')
+        self._debug_message(f'EteraUartBridge starting {serial_port}')
+
         self._s = serial.Serial(port=serial_port, baudrate=115200, timeout=0.5)
+
+        self._debug_message(f'EteraUartBridge opened {serial_port}')
 
         self._motor_queue = [MotorQueue() for _ in range(4)]
         self._motor_queue_lock = [asyncio.Lock() for _ in range(4)]
@@ -71,6 +77,13 @@ class EteraUartBridge:
         self.set_device_message_handler(on_device_message_handler)
         self.set_device_reset_handler(on_device_reset_handler)
 
+    def _write_debug(self, data: bytes):
+        self._debug_capture.write(data)
+
+    def _debug_message(self, msg: str):
+        self._write_debug(f'[{time.time()} - {msg}\n]'.encode())
+        self._debug_capture.flush()
+
     async def ready(self):
         await self._device_ready.wait()
 
@@ -82,7 +95,10 @@ class EteraUartBridge:
             raise ValueError("Length must be non-negative.")
 
         if not self._device_ready.is_set():
+            self._debug_message(f"Move motor - device is not ready. (state={self._parse_state})")
             raise self.DeviceException("Device is not ready.")
+
+        self._debug_message(f"Move motor {motor_id} - direction={direction}, length_ms={length_ms}, override={override}")
 
         move_commands = []
 
@@ -100,47 +116,67 @@ class EteraUartBridge:
         for i, command in enumerate(move_commands):
             await command.finished.wait()
             if not command.successful:
+                self._debug_message(f"Move motor {motor_id} - failed. (seq. {i}/{len(move_commands)})")
                 raise self.DeviceException(f"Failed to fully move motor (seq. {i}/{len(move_commands)}).")
+        
+        self._debug_message(f"Move motor {motor_id} - finished. (seq. {len(move_commands)})")
 
     async def set_relay(self, relay_id: int, state: bool):
         if relay_id > 7 or relay_id < 0:
             raise ValueError("Relay ID must be between 0 and 7.")
         
         if not self._device_ready.is_set():
+            self._debug_message(f"Set relay - device is not ready. (state={self._parse_state})")
             raise self.DeviceException("Device is not ready.")
+
+        self._debug_message(f"Set relay {relay_id} - state={state}")
 
         async with self._relay_queue_lock:
             command = self._relay_queue.add_command(relay_id, state)
         
         await command.finished.wait()
         if not command.successful:
+            self._debug_message(f"Set relay {relay_id} - failed.")
             raise self.DeviceException("Failed to switch relay.")
+        self._debug_message(f"Set relay {relay_id} - finished.")
 
     async def get_sensors(self):
         if not self._device_ready.is_set():
+            self._debug_message(f"Get sensors - device is not ready. (state={self._parse_state})")
             raise self.DeviceException("Device is not ready.")
         
+        self._debug_message(f"Get sensors - count={len(self._temp_sensors)}")
+
         async with self._temp_sensors_lock:
-            return [a[:] for a in self._temp_sensors]
+            sensors = [a[:] for a in self._temp_sensors]
+            self._debug_message(f"Get sensors - finished.")
+            return sensors
 
     _invalid_temperature = ctypes.c_int16.from_buffer_copy(b'\xff\x7f').value / 128.0
 
     async def get_temperatures(self):
         if not self._device_ready.is_set():
+            self._debug_message(f"Get temperatures - device is not ready. (state={self._parse_state})")
             raise self.DeviceException("Device is not ready.")
         
+        self._debug_message(f"Get temperatures - count={len(self._temp_sensors)}")
+
         async with self._temperature_queue_lock:
             command = self._temperature_queue.add_command()
 
         await command.finished.wait()
         if not command.successful:
+            self._debug_message(f"Get temperatures - failed.")
             raise self.DeviceException("Failed to get temperature.")
         if any(temp == self._invalid_temperature for temp in command.temperatures):
+            self._debug_message(f"Get temperatures - invalid temperature received.")
             raise self.DeviceException("Invalid temperature received.")
+        self._debug_message(f"Get temperatures - finished.")
         return command.temperatures
 
     async def run_forever(self):
         if self._running:
+            self._debug_message(f"EteraUartBridge is already running on {self._s.port}")
             raise self.DeviceException(f"EteraUartBridge is already running on {self._s.port}")
 
         self._running = True
@@ -151,22 +187,27 @@ class EteraUartBridge:
                 if len(self._command_read_buffer) > 0:
                     c = self._command_read_buffer[0:1]
                     self._command_read_buffer = self._command_read_buffer[1:]
+                    self._write_debug(b'#' + c)
                 else:
                     c = self._s.read(1)
-                                
+                    self._write_debug(b'<' + c)
+
                 match c:
                     # Device ready!
                     case b'\xE0':
+                        self._debug_message(f'Device is ready (state={self._parse_state})')
                         self._device_message(f'Device is ready on {self._s.port} (state={self._parse_state})'.encode())
                         if self._parse_state not in [self._ParseState.WAIT_READY, self._ParseState.DEVICE_RESET] and \
                             self._on_device_reset_handler is not None:
                             asyncio.create_task(self._on_device_reset_handler())
                         await self._init()
                     case b'\xE1':
+                        self._debug_message(f'Device is resetting (state={self._parse_state})')
                         self._device_message(f'Device reset unexpectedly in state {self._parse_state}'.encode())
                         await self._reset_device()
                     # Start of ASCII message
                     case b'\xEA':
+                        self._debug_message('<msg>')
                         if self._current_read != b'':
                             self._device_message(self._current_read)
                         self._current_read = b''
@@ -174,7 +215,9 @@ class EteraUartBridge:
                         self._parse_state = self._ParseState.READ_ASCII
                     # End of ASCII message
                     case b'\xEB':
+                        self._debug_message('</msg>')
                         if self._parse_state != self._ParseState.READ_ASCII:
+                            self._debug_message(f'End of ASCII message in state {self._parse_state}')
                             self._device_message(f'Device reached end of ASCII message in state {self._parse_state} and will try to reset'.encode())
                             await self._reset_device()
                         self._parse_state = self._before_read_state
@@ -188,11 +231,14 @@ class EteraUartBridge:
                             # Stop moving motor
                             if c[0] & 0b11111000 == 0b11010000:
                                 motor_id = c[0] & 0b0000011
+                                self._debug_message(f'Motor {motor_id} stopped (state={self._parse_state})')
                                 async with self._motor_queue_lock[motor_id]:
                                     command = self._motor_queue[motor_id].get_next_command()
                                     if command is not None:
                                         command.finished.set()
                             else:
+                                self._write_debug(b'!')
+                                self._debug_message(f'Unknown input (state={self._parse_state})')
                                 self._device_message(f'Device reached unknown input `{c}` in state {self._parse_state} and will try to reset'.encode())
                                 await self._reset_device()
 
@@ -226,6 +272,7 @@ class EteraUartBridge:
                         async with self._temp_sensors_lock:
                             for _ in range(len(self._temp_sensors)):
                                 c = self._s.read(2)
+                                self._write_debug(b'<' + c)
                                 if len(c) != 2:
                                     command.successful = False
                                     break
@@ -252,11 +299,13 @@ class EteraUartBridge:
             self._on_device_message_handler = async_handler
 
     async def _init(self):
+        self._debug_message(f'Initializing device (state={self._parse_state})')
         self._device_ready.clear()
 
         if not self._send_command(b'c'):
             raise self.DeviceException('Failed to send get temperature count command')
         c = self._s.read(1)
+        self._write_debug(b'<' + c)
         if len(c) != 1:
             raise self.DeviceException('Failed to get temperature count')
 
@@ -268,15 +317,18 @@ class EteraUartBridge:
             self._temp_sensors.clear()
             for _ in range(temp_sensor_count):
                 c = self._s.read(8)
+                self._write_debug(b'<' + c)
                 if len(c) != 8:
                     raise self.DeviceException('Failed to get temperature sensors')
                 self._temp_sensors.append(c)
 
         self._parse_state = self._ParseState.IDLE
         self._device_ready.set()
+        self._debug_message(f'Device initialized (state={self._parse_state})')
 
         
     async def _reset_device(self):
+        self._debug_message(f'Resetting device (state={self._parse_state})')
         self._device_ready.clear()
         if self._parse_state != self._ParseState.WAIT_READY and self._on_device_reset_handler is not None:
             asyncio.create_task(self._on_device_reset_handler())
@@ -284,13 +336,18 @@ class EteraUartBridge:
         self._parse_state = self._ParseState.DEVICE_RESET
         self._s.close()
         for i in range(4):
+            self._debug_message(f'Clearing motor {i} queue')
             async with self._motor_queue_lock[i]:
                 self._motor_queue[i].clear_queue()
         async with self._relay_queue_lock:
+            self._debug_message(f'Clearing relay queue')
             self._relay_queue.clear_queue()
         async with self._temperature_queue_lock:
+            self._debug_message(f'Clearing temperature queue')
             self._temperature_queue.clear_queue()
         self._s = serial.Serial(port=self._s.port, baudrate=self._s.baudrate, timeout=self._s.timeout)
+        self._debug_message(f'EteraUartBridge re-opened {self._s.port}')
+        self._debug_message(f'Device reset (state={self._parse_state})')
 
 
     def _send_command(self, command: bytes, expected_byte: bytes | None = None):
@@ -298,24 +355,30 @@ class EteraUartBridge:
             expected_byte = command[0:1]
         for retries in range(3):
             self._s.write(command)
+            self._write_debug(b'>' + command)
             # print(f"Sending command {command}")
             if self._confirm_command(expected_byte):
                 # print(f"Command {command} successful")
                 return True
         # print(f"Command {command} failed")
+        self._debug_message(f'Failed to send command {command} (state={self._parse_state})')
         return False
 
     def _confirm_command(self, expected_byte: bytes):
         assert(len(expected_byte) == 1)
         while True:
             c = self._s.read(1)
+            self._write_debug(b'<' + c)
 
             if len(c) == 0:
+                self._debug_message(f'Failed to read confirmation byte (state={self._parse_state})')
                 return False
 
             if c == expected_byte:
+                self._write_debug(b'*')
                 return True
             else:
+                self._write_debug(b'$')
                 self._command_read_buffer += c
 
     def _device_message(self, message: bytes):
