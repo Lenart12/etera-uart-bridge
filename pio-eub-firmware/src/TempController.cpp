@@ -28,6 +28,15 @@ bool TempController::NextState::process_wait(State& current) {
     return true;
 }
 
+void PrintHex8_(uint8_t *data, uint8_t length) {
+    for (int i = 0; i < length; i++) {
+        if (data[i] < 0x10) Serial.print('0');
+        Serial.print(data[i], HEX);
+        if (i < length -1)
+            Serial.print(':');
+    }
+}
+
 void TempController::Process() {
     switch (state)
     {
@@ -108,7 +117,13 @@ void TempController::Process() {
         TC_PRINT_START();
         Serial.print("Temperature Controller setup found ");
         Serial.print(device_count, DEC);
-        Serial.print(" sensors.");
+        Serial.println(" sensors.");
+        Serial.println("Addresses:");
+        for (int i = 0; i < device_count; i++) {
+            Serial.print("#"); Serial.print(i, DEC);
+            Serial.print("\t"); PrintHex8_(devices[i], 8);
+            Serial.println();
+        }
         TC_PRINT_END();
 
         switch_state(State::START_CONVERSION);
