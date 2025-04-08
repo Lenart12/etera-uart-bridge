@@ -122,9 +122,20 @@ void TempController::Process() {
         for (int i = 0; i < device_count; i++) {
             Serial.print("#"); Serial.print(i, DEC);
             Serial.print("\t"); PrintHex8_(devices[i], 8);
+
+            #ifdef READ_POWER_STATE
+            ds.reset();
+            ds.select(devices[i]);
+            ds.write(0xB4); // Read power state command
+            uint8_t power_state = ds.read_bit();
+            Serial.print('\t');
+            Serial.print(power_state ? "External" : "Parasite");
+            #endif
+
             Serial.println();
         }
         TC_PRINT_END();
+
 
         switch_state(State::START_CONVERSION);
         break;

@@ -6,6 +6,7 @@
 #include <Arduino.h>
 
 //#define DEBUG_TEMP
+#define READ_POWER_STATE
 
 // Legacy DS1820 sensors are experiencing glitches to x.75 or to x.76
 // few times a day. With this fix we compare previous reading and decide
