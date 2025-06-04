@@ -48,7 +48,7 @@ class EteraUartBridge:
     _on_device_reset_handler: callable
 
     def __init__(self, serial_port: str, on_device_message_handler: callable = print,  on_device_reset_handler: callable = None):
-        self._debug_capture = open('/tmp/etera_debug.hex', 'ab')
+        self._debug_capture = None # open('/tmp/etera_debug.hex', 'ab')
         self._debug_lock = asyncio.Lock()
         self._debug_last_channel = None
         asyncio.create_task(self._debug_message(f'EteraUartBridge starting {serial_port}'))
@@ -80,6 +80,8 @@ class EteraUartBridge:
         self.set_device_reset_handler(on_device_reset_handler)
 
     async def _write_debug(self, channel: str, data: bytes):
+        if self._debug_capture is None:
+            return
         async with self._debug_lock:
             if self._debug_last_channel != channel:
                 if self._debug_last_channel is not None and self._debug_last_channel != 'M':
@@ -106,6 +108,8 @@ class EteraUartBridge:
         await self._write_debug_hex('BW', data)
 
     async def _debug_message(self, msg: str):
+        if self._debug_capture is None:
+            return
         await self._write_debug('M', f'{time.strftime("%b %d %H:%M:%S")} - {msg}\n'.encode())
         self._debug_capture.flush()
 
