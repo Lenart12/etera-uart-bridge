@@ -30,7 +30,6 @@ async def main():
             finally:
                 direction = not direction
 
-
     async def example_relays():
         state = True
         await etera.ready()
@@ -59,7 +58,7 @@ async def main():
                 print('Get temp error', e)
             finally:
                 await asyncio.sleep(1)
-            
+
     await asyncio.gather(
         example_motors(),
         example_relays(),

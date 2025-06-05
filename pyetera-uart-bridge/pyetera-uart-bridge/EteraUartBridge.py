@@ -391,7 +391,7 @@ class EteraUartBridge:
             await self._debug_buf_write(c)
             self._command_read_buffer += c
 
-        for retries in range(3):
+        for _retries in range(3):
             self._s.write(command)
             await self._debug_s_write(command)
             # print(f"Sending command {command}")
