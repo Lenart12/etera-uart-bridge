@@ -181,7 +181,7 @@ class EteraUartBridge:
 
         async with self._temp_sensors_lock:
             sensors = [a[:] for a in self._temp_sensors]
-            await self._debug_message(f"Get sensors - finished.")
+            await self._debug_message("Get sensors - finished.")
             return sensors
 
     _invalid_temperature = ctypes.c_int16.from_buffer_copy(b'\xff\x7f').value / 128.0
@@ -198,12 +198,12 @@ class EteraUartBridge:
 
         await command.finished.wait()
         if not command.successful:
-            await self._debug_message(f"Get temperatures - failed.")
+            await self._debug_message("Get temperatures - failed.")
             raise self.DeviceException("Failed to get temperature.")
         if any(temp == self._invalid_temperature for temp in command.temperatures):
-            await self._debug_message(f"Get temperatures - invalid temperature received.")
+            await self._debug_message("Get temperatures - invalid temperature received.")
             raise self.DeviceException("Invalid temperature received.")
-        await self._debug_message(f"Get temperatures - finished.")
+        await self._debug_message("Get temperatures - finished.")
         return command.temperatures
 
     async def run_forever(self):
@@ -371,10 +371,10 @@ class EteraUartBridge:
             async with self._motor_queue_lock[i]:
                 self._motor_queue[i].clear_queue()
         async with self._relay_queue_lock:
-            await self._debug_message(f'Clearing relay queue')
+            await self._debug_message('Clearing relay queue')
             self._relay_queue.clear_queue()
         async with self._temperature_queue_lock:
-            await self._debug_message(f'Clearing temperature queue')
+            await self._debug_message('Clearing temperature queue')
             self._temperature_queue.clear_queue()
         self._s = serial.Serial(port=self._s.port, baudrate=self._s.baudrate, timeout=self._s.timeout)
         await self._debug_message(f'EteraUartBridge re-opened {self._s.port}')
