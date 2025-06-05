@@ -130,7 +130,8 @@ class EteraUartBridge:
             await self._debug_message(f"Move motor - device is not ready. (state={self._parse_state})")
             raise self.DeviceException("Device is not ready.")
 
-        await self._debug_message(f"Move motor {motor_id} - direction={direction}, length_ms={length_ms}, override={override}")
+        await self._debug_message(f"Move motor {motor_id} - direction={direction}, "
+                                  f"length_ms={length_ms}, override={override}")
 
         move_commands = []
 
@@ -228,7 +229,8 @@ class EteraUartBridge:
                     # Device ready!
                     case b'\xE0':
                         await self._debug_message(f'Device is ready (state={self._parse_state})')
-                        await self._device_message(f'Device is ready on {self._s.port} (state={self._parse_state})'.encode())
+                        await self._device_message(f'Device is ready on {self._s.port} '
+                                                   f'(state={self._parse_state})'.encode())
                         if self._parse_state not in [self._ParseState.WAIT_READY, self._ParseState.DEVICE_RESET] and \
                                 self._on_device_reset_handler is not None:
                             asyncio.create_task(self._on_device_reset_handler())
@@ -250,7 +252,8 @@ class EteraUartBridge:
                         await self._debug_message(f'Ascii end: {self._current_read}')
                         if self._parse_state != self._ParseState.READ_ASCII:
                             await self._debug_message(f'End of ASCII message in state {self._parse_state}')
-                            await self._device_message(f'Device reached end of ASCII message in state {self._parse_state} and will try to reset'.encode())
+                            await self._device_message('Device reached end of ASCII message in state '
+                                                       f'{self._parse_state} and will try to reset'.encode())
                             await self._reset_device()
                         self._parse_state = self._before_read_state
                         await self._device_message(self._current_read)
@@ -271,7 +274,8 @@ class EteraUartBridge:
                             else:
                                 await self._write_debug('R', b'!')
                                 await self._debug_message(f'Unknown input (state={self._parse_state})')
-                                await self._device_message(f'Device reached unknown input `{c}` in state {self._parse_state} and will try to reset'.encode())
+                                await self._device_message(f'Device reached unknown input `{c}` in state '
+                                                           f'{self._parse_state} and will try to reset'.encode())
                                 await self._reset_device()
 
             if self._parse_state == self._ParseState.IDLE:
