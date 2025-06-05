@@ -1,5 +1,6 @@
 import asyncio
 
+
 class RelayQueueCommand:
     relay_id: int
     state: bool

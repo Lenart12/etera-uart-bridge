@@ -1,5 +1,6 @@
 from .TemperatureQueueCommand import TemperatureQueueCommand
 
+
 class TemperatureQueue:
     _queue: list[TemperatureQueueCommand]
 
@@ -25,9 +26,8 @@ class TemperatureQueue:
 
     def is_empty(self):
         return len(self._queue) == 0
-    
+
     def clear_queue(self):
         for command in self._queue:
             command.finished.set()
         self._queue = []
-

@@ -1,5 +1,6 @@
 import asyncio
 
+
 class TemperatureQueueCommand:
     temperatures: list[float]
     finished: asyncio.Event

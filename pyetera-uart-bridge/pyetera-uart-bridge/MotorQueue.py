@@ -1,5 +1,6 @@
 from .MotorQueueCommand import MotorQueueCommand
 
+
 class MotorQueue:
     _queue: list[MotorQueueCommand]
 
@@ -25,9 +26,8 @@ class MotorQueue:
 
     def is_empty(self):
         return len(self._queue) == 0
-    
+
     def clear_queue(self):
         for command in self._queue:
             command.finished.set()
         self._queue = []
-

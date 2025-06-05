@@ -1,5 +1,6 @@
 from .RelayQueueCommand import RelayQueueCommand
 
+
 class RelayQueue:
     _queue: list[RelayQueueCommand]
 
@@ -25,9 +26,8 @@ class RelayQueue:
 
     def is_empty(self):
         return len(self._queue) == 0
-    
+
     def clear_queue(self):
         for command in self._queue:
             command.finished.set()
         self._queue = []
-

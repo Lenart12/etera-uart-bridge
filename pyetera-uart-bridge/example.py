@@ -1,6 +1,7 @@
 from kronoterm2mqtt.pyetera_uart_bridge import EteraUartBridge
 import asyncio
 
+
 async def main():
     etera = EteraUartBridge('/dev/ttyUSB1')
 
@@ -15,7 +16,7 @@ async def main():
         direction = True
         await etera.ready()
 
-        await etera.move_motor(0, EteraUartBridge.Direction.CLOCKWISE, 120 * 1000) # clockwise for 120 seconds
+        await etera.move_motor(0, EteraUartBridge.Direction.CLOCKWISE, 120 * 1000)  # clockwise for 120 seconds
 
         while True:
             moves = []

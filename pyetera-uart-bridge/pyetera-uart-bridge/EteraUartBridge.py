@@ -11,6 +11,7 @@ import inspect
 
 import time
 
+
 class EteraUartBridge:
     _s: serial.Serial
 
@@ -47,8 +48,9 @@ class EteraUartBridge:
     _on_device_message_handler: callable
     _on_device_reset_handler: callable
 
-    def __init__(self, serial_port: str, on_device_message_handler: callable = print,  on_device_reset_handler: callable = None):
-        self._debug_capture = None # open('/tmp/etera_debug.hex', 'ab')
+    def __init__(self, serial_port: str, on_device_message_handler: callable = print,
+                 on_device_reset_handler: callable = None):
+        self._debug_capture = None  # open('/tmp/etera_debug.hex', 'ab')
         self._debug_lock = asyncio.Lock()
         self._debug_last_channel = None
         asyncio.create_task(self._debug_message(f'EteraUartBridge starting {serial_port}'))
@@ -116,10 +118,11 @@ class EteraUartBridge:
     async def ready(self):
         await self._device_ready.wait()
 
-    async def move_motor(self, motor_id: int, direction: MotorQueueCommand.Direction, length_ms: int, override: bool = False):
+    async def move_motor(self, motor_id: int, direction: MotorQueueCommand.Direction,
+                         length_ms: int, override: bool = False):
         if motor_id > 3 or motor_id < 0:
             raise ValueError("Motor ID must be between 0 and 3.")
-        
+
         if length_ms < 0:
             raise ValueError("Length must be non-negative.")
 
@@ -138,7 +141,7 @@ class EteraUartBridge:
             while length_ms > 65535:
                 move_commands.append(self._motor_queue[motor_id].add_command(direction, 65535))
                 length_ms -= 65535
-                    
+
             if length_ms > 0:
                 move_commands.append(self._motor_queue[motor_id].add_command(direction, length_ms))
 
@@ -147,13 +150,13 @@ class EteraUartBridge:
             if not command.successful:
                 await self._debug_message(f"Move motor {motor_id} - failed. (seq. {i}/{len(move_commands)})")
                 raise self.DeviceException(f"Failed to fully move motor (seq. {i}/{len(move_commands)}).")
-        
+
         await self._debug_message(f"Move motor {motor_id} - finished. (seq. {len(move_commands)})")
 
     async def set_relay(self, relay_id: int, state: bool):
         if relay_id > 7 or relay_id < 0:
             raise ValueError("Relay ID must be between 0 and 7.")
-        
+
         if not self._device_ready.is_set():
             await self._debug_message(f"Set relay - device is not ready. (state={self._parse_state})")
             raise self.DeviceException("Device is not ready.")
@@ -162,7 +165,7 @@ class EteraUartBridge:
 
         async with self._relay_queue_lock:
             command = self._relay_queue.add_command(relay_id, state)
-        
+
         await command.finished.wait()
         if not command.successful:
             await self._debug_message(f"Set relay {relay_id} - failed.")
@@ -173,7 +176,7 @@ class EteraUartBridge:
         if not self._device_ready.is_set():
             await self._debug_message(f"Get sensors - device is not ready. (state={self._parse_state})")
             raise self.DeviceException("Device is not ready.")
-        
+
         await self._debug_message(f"Get sensors - count={len(self._temp_sensors)}")
 
         async with self._temp_sensors_lock:
@@ -187,7 +190,7 @@ class EteraUartBridge:
         if not self._device_ready.is_set():
             await self._debug_message(f"Get temperatures - device is not ready. (state={self._parse_state})")
             raise self.DeviceException("Device is not ready.")
-        
+
         await self._debug_message(f"Get temperatures - count={len(self._temp_sensors)}")
 
         async with self._temperature_queue_lock:
@@ -227,7 +230,7 @@ class EteraUartBridge:
                         await self._debug_message(f'Device is ready (state={self._parse_state})')
                         await self._device_message(f'Device is ready on {self._s.port} (state={self._parse_state})'.encode())
                         if self._parse_state not in [self._ParseState.WAIT_READY, self._ParseState.DEVICE_RESET] and \
-                            self._on_device_reset_handler is not None:
+                                self._on_device_reset_handler is not None:
                             asyncio.create_task(self._on_device_reset_handler())
                         await self._init()
                     case b'\xE1':
@@ -283,7 +286,7 @@ class EteraUartBridge:
                                 command.successful = await self._send_command(cmd_bytes)
                                 if not command.successful:
                                     command.finished.set()
-                            
+
                 # Process relay queue
                 async with self._relay_queue_lock:
                     if not self._relay_queue.is_empty():
@@ -355,7 +358,6 @@ class EteraUartBridge:
         self._device_ready.set()
         await self._debug_message(f'Device initialized (state={self._parse_state})')
 
-        
     async def _reset_device(self):
         await self._debug_message(f'Resetting device (state={self._parse_state})')
         self._device_ready.clear()
@@ -377,7 +379,6 @@ class EteraUartBridge:
         self._s = serial.Serial(port=self._s.port, baudrate=self._s.baudrate, timeout=self._s.timeout)
         await self._debug_message(f'EteraUartBridge re-opened {self._s.port}')
         await self._debug_message(f'Device reset (state={self._parse_state})')
-
 
     async def _send_command(self, command: bytes, expected_byte: bytes | None = None):
         if expected_byte is None:
@@ -402,7 +403,7 @@ class EteraUartBridge:
         return False
 
     async def _confirm_command(self, expected_byte: bytes):
-        assert(len(expected_byte) == 1)
+        assert (len(expected_byte) == 1)
         while True:
             c = self._s.read(1)
             await self._debug_s_read(c)
@@ -421,4 +422,3 @@ class EteraUartBridge:
     async def _device_message(self, message: bytes):
         if self._on_device_message_handler is not None:
             asyncio.create_task(self._on_device_message_handler(message))
-
