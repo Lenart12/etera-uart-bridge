@@ -1,1 +1,1 @@
-from .EteraUartBridge import EteraUartBridge
+from .EteraUartBridge import EteraUartBridge  # noqa
