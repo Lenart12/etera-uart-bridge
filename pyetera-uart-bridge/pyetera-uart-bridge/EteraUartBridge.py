@@ -1,15 +1,15 @@
-import serial
 import asyncio
-from enum import Enum
 import ctypes
+from enum import Enum
+import inspect
+import time
+
+import serial
 
 from .MotorQueue import MotorQueue
 from .MotorQueueCommand import MotorQueueCommand
 from .RelayQueue import RelayQueue
 from .TemperatureQueue import TemperatureQueue
-import inspect
-
-import time
 
 
 class EteraUartBridge:

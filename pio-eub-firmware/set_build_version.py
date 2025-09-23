@@ -1,5 +1,6 @@
-from SCons.Script import Environment
 import subprocess
+
+from SCons.Script import Environment
 
 
 def get_version_string():

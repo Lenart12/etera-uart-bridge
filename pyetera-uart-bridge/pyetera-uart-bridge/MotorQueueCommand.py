@@ -1,6 +1,6 @@
-from enum import Enum
 import asyncio
 import ctypes
+from enum import Enum
 
 
 class MotorQueueCommand:
