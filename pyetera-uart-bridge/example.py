@@ -23,8 +23,15 @@ async def main():
             moves = []
             try:
                 for i in range(4):
-                    moves.append(etera.move_motor(i, EteraUartBridge.Direction.CLOCKWISE
-                                                  if direction else EteraUartBridge.Direction.COUNTER_CLOCKWISE, 1000))
+                    moves.append(
+                        etera.move_motor(
+                            i,
+                            EteraUartBridge.Direction.CLOCKWISE
+                            if direction
+                            else EteraUartBridge.Direction.COUNTER_CLOCKWISE,
+                            1000,
+                        )
+                    )
                 await asyncio.gather(*moves)
             except EteraUartBridge.DeviceException as e:
                 print('Motor move error', e)
@@ -61,12 +68,7 @@ async def main():
             finally:
                 await asyncio.sleep(1)
 
-    await asyncio.gather(
-        example_motors(),
-        example_relays(),
-        example_temp(),
-        etera.run_forever()
-    )
+    await asyncio.gather(example_motors(), example_relays(), example_temp(), etera.run_forever())
 
 
 asyncio.run(main())
