@@ -3,7 +3,7 @@ import ctypes
 from enum import Enum
 import inspect
 import time
-
+from typing import Callable, Optional
 import serial
 
 from .MotorQueue import MotorQueue
@@ -49,7 +49,9 @@ class EteraUartBridge:
     _on_device_reset_handler: callable
 
     def __init__(
-        self, serial_port: str, on_device_message_handler: callable = print, on_device_reset_handler: callable = None
+        self, serial_port: str, 
+        on_device_message_handler: callable = print, 
+        on_device_reset_handler: Optional[callable] = None
     ):
         self._debug_capture = None  # open('/tmp/etera_debug.hex', 'ab')
         self._debug_lock = asyncio.Lock()
