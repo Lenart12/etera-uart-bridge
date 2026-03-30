@@ -1,14 +1,14 @@
-from .MotorQueueCommand import MotorQueueCommand
+from .relay_queue_command import RelayQueueCommand
 
 
-class MotorQueue:
-    _queue: list[MotorQueueCommand]
+class RelayQueue:
+    _queue: list[RelayQueueCommand]
 
     def __init__(self):
         self._queue = []
 
-    def add_command(self, direction: MotorQueueCommand.Direction, length: int):
-        command = MotorQueueCommand(direction, length)
+    def add_command(self, relay_id: int, state: bool):
+        command = RelayQueueCommand(relay_id, state)
         self._queue.append(command)
         return command
 

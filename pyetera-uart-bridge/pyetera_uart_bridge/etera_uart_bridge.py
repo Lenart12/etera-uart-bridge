@@ -8,10 +8,10 @@ import time
 
 import serial
 
-from .MotorQueue import MotorQueue
-from .MotorQueueCommand import MotorQueueCommand
-from .RelayQueue import RelayQueue
-from .TemperatureQueue import TemperatureQueue
+from .motor_queue import MotorQueue
+from .motor_queue_command import MotorQueueCommand
+from .relay_queue import RelayQueue
+from .temperature_queue import TemperatureQueue
 
 
 class EteraUartBridge:

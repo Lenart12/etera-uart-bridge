@@ -1,4 +1,4 @@
-from .TemperatureQueueCommand import TemperatureQueueCommand
+from .temperature_queue_command import TemperatureQueueCommand
 
 
 class TemperatureQueue:
