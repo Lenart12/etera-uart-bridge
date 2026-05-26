@@ -5,7 +5,7 @@ import ctypes
 from enum import Enum
 import inspect
 import time
-
+from typing import Callable
 import serial
 
 from .motor_queue import MotorQueue
@@ -47,13 +47,13 @@ class EteraUartBridge:
     _temp_sensors: list[bytes]
     _temp_sensors_lock: asyncio.Lock
 
-    _on_device_message_handler: callable
-    _on_device_reset_handler: callable
+    _on_device_message_handler: Callable
+    _on_device_reset_handler: Callable
 
     def __init__(
         self, serial_port: str, 
-        on_device_message_handler: callable = print, 
-        on_device_reset_handler: callable | None = None
+        on_device_message_handler: Callable = print, 
+        on_device_reset_handler: Callable | None = None
     ):
         self._debug_capture = None  # open('/tmp/etera_debug.hex', 'ab')
         self._debug_lock = asyncio.Lock()
@@ -332,7 +332,7 @@ class EteraUartBridge:
 
             await asyncio.sleep(0.05)
 
-    def set_device_reset_handler(self, handler: callable):
+    def set_device_reset_handler(self, handler: Callable):
         if inspect.iscoroutinefunction(handler) or handler is None:
             self._on_device_reset_handler = handler
         else:
@@ -342,7 +342,7 @@ class EteraUartBridge:
 
             self._on_device_reset_handler = async_handler
 
-    def set_device_message_handler(self, handler: callable):
+    def set_device_message_handler(self, handler: Callable):
         if inspect.iscoroutinefunction(handler) or handler is None:
             self._on_device_message_handler = handler
         else:
