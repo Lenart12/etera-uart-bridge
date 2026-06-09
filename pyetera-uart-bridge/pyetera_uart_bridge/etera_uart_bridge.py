@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import ctypes
 from enum import Enum
 import inspect
 import time
-from typing import Callable
+
 import serial
 
 from .motor_queue import MotorQueue
